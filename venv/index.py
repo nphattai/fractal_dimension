@@ -2,9 +2,13 @@ import math
 from flask import Flask, request
 import numpy as np
 import matplotlib.pyplot
+matplotlib.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 from matplotlib.patches import Polygon
+import json
+import datetime
 
 def Area(corners):
     n = len(corners) # of corners
@@ -69,9 +73,10 @@ def fractal_dimension(Z, threshold=0.9):
     coeffs = np.polyfit(np.log(sizes), np.log(counts), 1)
     return -coeffs[0]
 
-def convert_points_image(points):
+def convert_points_image(points, file_name):
     pts = np.array(points)
     p = Polygon(pts, closed=False)
+    plt.cla()
     ax = plt.gca()
     ax.add_patch(p)
     ax.set_xlim(0, 500)
@@ -86,18 +91,18 @@ def convert_points_image(points):
     # remove the tick
     ax.set_xticks([])
     ax.set_yticks([])
-
-    plt.savefig('test.png')
-
+    plt.savefig(file_name)
 
 app = Flask(__name__)
 
 @app.route('/', methods = ["POST"])
 def demo():
-    body =request.json
-    convert_points_image(body)
-    image = rgb2gray(matplotlib.pyplot.imread("test.png"))
+    data = request.json['data']
+    print(data)
+    convert_points_image(data, 'test.png')
+    image = rgb2gray(matplotlib.pyplot.imread('test.png'))
     FR = fractal_dimension(image)
-    return {"fractal dimension": FR}
+    print(FR)
+    return {"FR": FR}
 
 app.run()
